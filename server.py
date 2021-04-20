@@ -34,7 +34,7 @@ def sendInfoThread(address, fileName, hash, clientId, logger: TextIOWrapper, ser
 def startLogger():
     now = datetime.now()
     dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-    print("date and time =", dt_string)
+    print("Date and time =", dt_string)
     return open(str(dt_string)+"-Server-log.txt", "a")
 
 
@@ -64,7 +64,7 @@ def startServer(logger: TextIOWrapper):
     port = 10000
     server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server.bind((host, port))
-    print("socket binded to port", port)
+    print("Socket binded to port", port)
     return server
 
 
@@ -73,8 +73,8 @@ def printMenu(logger: TextIOWrapper):
     print('1. Archivo de 100MB')
     print('2. Archivo de 250MB')
     opcionA = input()
-    logger.write("Nombre del archivo Enviado: ")
-    consoleMsg = ('Ustede selecciono la opcion ' +
+    logger.write("Nombre del archivo enviado: ")
+    consoleMsg = ('Usted selecciono la opcion ' +
                   opcionA) if opcionA == '1' or opcionA == '2' else 'Opcion de prueba'
     print(consoleMsg)
 
@@ -82,7 +82,7 @@ def printMenu(logger: TextIOWrapper):
 def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
     lista = []
     clientId = 0
-    print("recibiendo clientes")
+    print("Recibiendo clientes")
     while clientsNumber > clientId:
         data, addr = server.recvfrom(1024)
         if data == bytes("Hola", "utf-8"):
@@ -95,7 +95,7 @@ def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
         elif data[0:20] == bytes("Ya recibi mi numero", "utf-8"):
             id = data[20:len(data)].decode('utf-8')
             lista.append([addr, id])
-            print("el cliente recibio su numero: " + id)
+            print("El cliente recibio su numero: " + id)
     return lista
 
 
@@ -110,7 +110,7 @@ def Main():
     clientsNumber = int(input())
     print('Usted seleciono '+str(clientsNumber)+' usuarios')
     # server.listen(25)
-    print("socket is listening")
+    print("Socket is listening")
     clients = getClients(logger, server, clientsNumber)
 
     thread_list = []
@@ -126,15 +126,15 @@ def Main():
         if data[0:10] == bytes("Ya recibi", "utf-8"):
             finishedClients += 1
             clientId = data[10:len(data)].decode('utf-8')
-            print("Confimacion exitosa para cliente" + clientId)
+            print("Confirmacion exitosa para cliente " + clientId)
             logger.write(
-                "Tranferencia Exitosa hacia el cliente " + clientId+"\n")
+                "Tranferencia exitosa hacia el cliente " + clientId+"\n")
         elif data[0:10] == bytes("No recibi", "utf-8"):
             finishedClients += 1
             clientId = data[10:len(data)].decode('utf-8')
-            print("Confimacion NO exitosa para cliente" + clientId)
+            print("Confimacion NO exitosa para cliente " + clientId)
             logger.write(
-                "Tranferencia NO Exitosa hacia el cliente " + clientId+"\n")
+                "Tranferencia NO exitosa hacia el cliente " + clientId+"\n")
 
     print("Se termino de enviar la informacion a todos los clientes")
 
