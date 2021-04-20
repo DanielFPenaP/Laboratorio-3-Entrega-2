@@ -12,9 +12,9 @@ def sendDataToServer(data, socket: socket):
 
 
 def helloProtocol(socket: socket, log):
-    print("enviando hola")
+    print("Enviando hola")
     sendDataToServer(bytes("Hola", "utf-8"), socket)
-    print("recibiendo hola")
+    print("Recibiendo hola")
     data, address = socket.recvfrom(40)
     clientId = data.decode("utf-8")
     
@@ -46,8 +46,8 @@ def checkHash(socket: socket, fileName):
             hash = input_data
             calculateHash = getHashFromFile(fileName)
             comprobacion = hash == calculateHash
-            print("hash recibido: " + str(hash))
-            print("hash calculado: " + str(calculateHash))
+            print("Hash recibido: " + str(hash))
+            print("Hash calculado: " + str(calculateHash))
             print("Son iguales = " + str(comprobacion))
             return comprobacion
 
@@ -88,7 +88,7 @@ def saveFileFromServer(fileName, socket, clientId, log):
             sendDataToServer(bytes("No recibi", "utf-8"), socket)
             log.write("Transmision No exitosa del cliente " + clientId + "\n")
     else:
-        print("Error en la transmicion")
+        print("Error en la transmision")
         sendDataToServer(bytes("No recibi", "utf-8"), socket)
         log.write("Error en transmision del cliente " + clientId + "\n")
 
@@ -96,7 +96,7 @@ def saveFileFromServer(fileName, socket, clientId, log):
 def startLogger(clientId):
     now = datetime.now()
     dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-    print("date and time =", dt_string)
+    print("Date and time = ", dt_string)
     return open(dt_string+"_client_"+str(clientId)+"-log.txt", "a")
 
 
@@ -107,7 +107,7 @@ def threadedCliente(id):
     fileName, clientId = helloProtocol(cliente, logger)
     now = datetime.now()
     dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-    print("date and time =", dt_string)
+    print("Date and time = ", dt_string)
     logger.write("Comenzando Cliente\n")
     fileName, clientId = helloProtocol(cliente, logger)
     saveFileFromServer(fileName, cliente, clientId, logger)
@@ -132,7 +132,7 @@ def Main():
 
     for thread in thread_list:
         thread.join()
-    print("Se termino de recivir la informacion de todos los clientes")
+    print("Se termino de recibir la informacion de todos los clientes")
 
 
 if __name__ == '__main__':
