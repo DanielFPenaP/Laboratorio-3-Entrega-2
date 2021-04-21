@@ -14,11 +14,14 @@ def sendInfoThread(address, fileName, hash, clientId, logger: TextIOWrapper, ser
     file = open(fileName, "rb")
     content = file.read(4096)
     while content:
+        print("enviando paquete")
         server.sendto(content, address)
+        print("paquete enviado")
         paquetes += 1
         content = file.read(4096)
 
     server.sendto(bytes("Ya termine", "utf-8"), address)
+    print("enviando ya termine")
     elapsed_time = time() - start_time
     logger.write("El tiempo de transferencia del archivo "+fileName+" al cliente" +
                  str(clientId)+" es: "+str(elapsed_time)+" segundos\n")
@@ -83,8 +86,8 @@ def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
     lista = []
     clientId = 0
     print("recibiendo clientes")
-    while clientsNumber > clientId:
-        data, addr = server.recvfrom(1024)
+    while clientsNumber >= clientId:
+        data, addr = server.recvfrom(40)
         if data == bytes("Hola", "utf-8"):
             clientId += 1
             print('Connected to :', addr[0], ':', addr[1])
@@ -93,6 +96,7 @@ def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
                          str(addr[0])+" al puerto "+str(addr[1])+"\n")
             server.sendto(bytes(str(clientId), "utf-8"), addr)
         elif data[0:20] == bytes("Ya recibi mi numero", "utf-8"):
+            clientId += 1
             id = data[20:len(data)].decode('utf-8')
             lista.append([addr, id])
             print("el cliente recibio su numero: " + id)
@@ -115,27 +119,15 @@ def Main():
 
     thread_list = []
     for j in range(len(clients)):
+        print("Creando Thread "+str(j))
         thread = threading.Thread(target=sendInfoThread, args=(
-            clients[j][0], fielName, hash, clients[j][1], logger))
+            clients[j][0], fielName, hash, clients[j][1], logger,server))
         thread.start()
         thread_list.append(thread)
-
-    finishedClients = 0
-    while finishedClients < len(clients):
-        data, addr = server.recvfrom(1024)
-        if data[0:10] == bytes("Ya recibi", "utf-8"):
-            finishedClients += 1
-            clientId = data[10:len(data)].decode('utf-8')
-            print("Confimacion exitosa para cliente" + clientId)
-            logger.write(
-                "Tranferencia Exitosa hacia el cliente " + clientId+"\n")
-        elif data[0:10] == bytes("No recibi", "utf-8"):
-            finishedClients += 1
-            clientId = data[10:len(data)].decode('utf-8')
-            print("Confimacion NO exitosa para cliente" + clientId)
-            logger.write(
-                "Tranferencia NO Exitosa hacia el cliente " + clientId+"\n")
-
+        
+    for thread in thread_list:
+        print("haciendo join")
+        thread.join()
     print("Se termino de enviar la informacion a todos los clientes")
 
 

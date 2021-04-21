@@ -5,20 +5,20 @@ from datetime import datetime
 from time import time
 import os
 
-
+server_address = ('192.168.107.128', 10000)
 def sendDataToServer(data, socket: socket):
-    server_address = ('192.168.107.128', 10000)
+    
     socket.sendto(data, server_address)
 
 
 def helloProtocol(socket: socket, log):
-    print("enviando hola")
+    print("mandando hola")
     sendDataToServer(bytes("Hola", "utf-8"), socket)
-    print("recibiendo hola")
+    print("recibiendo id")
     data, address = socket.recvfrom(40)
-    clientId = data.decode("utf-8")
-    
-    # socket.sendto(bytes("Ya recibi mi numero"+str(clientId), "utf-8"),address)
+    clientId = data.decode("utf-8")  
+    print("mandando confirmacion")
+    socket.sendto(bytes("Ya recibi mi numero","utf-8"), address)
     fileName = "Cliente" + str(clientId) + "-.mp4"
     log.write("El nombre de archivo recibido es: "+fileName+"\n")
     log.write("Mi numero de cliente es: " + clientId + "\n")
@@ -58,20 +58,25 @@ def saveFileFromServer(fileName, socket, clientId, log):
     start_time = time()
     paquetes = 0
     goodEnd = False
+    print("empezando transferencia")
     while True:
         paquetes += 1
-        bytes_read = socket.recv(4096)
+        print("recibiendo paquete")
+        bytes_read,address = socket.recvfrom(4096)
+        print("recibi paquete")
         if not bytes_read:
             break
         end = bytes_read[len(bytes_read) - 10:len(bytes_read)
                          ] == bytes("Ya termine", "utf-8")
         if not end:
+            print("escribiendo")
             file.write(bytes_read)
         else:
+            print("termino")
             file.write(bytes_read[0:len(bytes_read) - 10])
             goodEnd = True
             break
-
+    print("evaluando resultado")
     if(goodEnd):
         elapsed_time = time() - start_time
         log.write("El tiempo de transferencia del archivo "+fileName+" al cliente " +
@@ -104,20 +109,20 @@ def threadedCliente(id):
     print('inicio cliente')
     cliente = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     logger = startLogger(id)
-    fileName, clientId = helloProtocol(cliente, logger)
+    # fileName, clientId = helloProtocol(cliente, logger)
     now = datetime.now()
     dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
     print("date and time =", dt_string)
     logger.write("Comenzando Cliente\n")
     fileName, clientId = helloProtocol(cliente, logger)
+    print("termina protocolo hola")
     saveFileFromServer(fileName, cliente, clientId, logger)
     sizefile = os.stat(fileName).st_size
     logger.write("Valor total de bytes enviados al cliente " +
                  clientId + " = "+str(sizefile)+" bytes\n")
     logger.close()
 
-    print('Cerrando socket')
-    socket.close()
+    
 
 
 def Main():
