@@ -63,7 +63,7 @@ def getFileName(value):
 
 def startServer(logger: TextIOWrapper):
     logger.write("Comenzando servidor\n")
-    host = "192.168.0.28"
+    host = "192.168.107.128"
     port = 10000
     server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server.bind((host, port))
@@ -80,7 +80,7 @@ def printMenu(logger: TextIOWrapper):
     consoleMsg = ('Usted seleccionó la opcion ' +
                   opcionA) if opcionA == '1' or opcionA == '2' else 'Opcion de prueba'
     print(consoleMsg)
-
+    return opcionA
 
 def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
     lista = []

@@ -5,7 +5,7 @@ from datetime import datetime
 from time import time
 import os
 
-server_address = ('192.168.0.28', 10000)
+server_address = ('192.168.107.128', 10000)
 
 def sendDataToServer(data, socket: socket):
     socket.sendto(data, server_address)
