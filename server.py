@@ -14,16 +14,16 @@ def sendInfoThread(address, fileName, hash, clientId, logger: TextIOWrapper, ser
     file = open(fileName, "rb")
     content = file.read(4096)
     while content:
-        print("enviando paquete")
+        print("Enviando paquete")
         server.sendto(content, address)
-        print("paquete enviado")
+        print("Paquete enviado")
         paquetes += 1
         content = file.read(4096)
 
     server.sendto(bytes("Ya termine", "utf-8"), address)
-    print("enviando ya termine")
+    print("Enviando ya termine")
     elapsed_time = time() - start_time
-    logger.write("El tiempo de transferencia del archivo "+fileName+" al cliente" +
+    logger.write("El tiempo de transferencia del archivo "+fileName+" al cliente " +
                  str(clientId)+" es: "+str(elapsed_time)+" segundos\n")
     logger.write("Numero de paquetes enviados al cliente " +
                  str(clientId) + " = "+str(paquetes)+" paquetes\n")
@@ -38,7 +38,7 @@ def startLogger():
     now = datetime.now()
     dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
     print("Date and time =", dt_string)
-    return open(str(dt_string)+"-Server-log.txt", "a")
+    return open(str(dt_string)+"-log.txt", "a")
 
 
 def getHashFromFile(fileName):
@@ -63,7 +63,7 @@ def getFileName(value):
 
 def startServer(logger: TextIOWrapper):
     logger.write("Comenzando servidor\n")
-    host = "192.168.107.128"
+    host = "192.168.0.28"
     port = 10000
     server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server.bind((host, port))
@@ -77,7 +77,7 @@ def printMenu(logger: TextIOWrapper):
     print('2. Archivo de 250MB')
     opcionA = input()
     logger.write("Nombre del archivo enviado: ")
-    consoleMsg = ('Usted selecciono la opcion ' +
+    consoleMsg = ('Usted seleccionó la opcion ' +
                   opcionA) if opcionA == '1' or opcionA == '2' else 'Opcion de prueba'
     print(consoleMsg)
 
@@ -85,11 +85,9 @@ def printMenu(logger: TextIOWrapper):
 def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
     lista = []
     clientId = 0
-
     print("Recibiendo clientes")
     while clientsNumber >= clientId:
         data, addr = server.recvfrom(40)
-
         if data == bytes("Hola", "utf-8"):
             clientId += 1
             print('Connected to :', addr[0], ':', addr[1])
@@ -101,7 +99,8 @@ def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
             clientId += 1
             id = data[20:len(data)].decode('utf-8')
             lista.append([addr, id])
-            print("El cliente recibio su numero: " + id)
+            print("El cliente recibio su número: " + id)
+            
     return lista
 
 
@@ -109,12 +108,12 @@ def Main():
     logger = startLogger()
     server = startServer(logger)
     selectedOption = printMenu(logger)
-    fielName = getFileName(selectedOption)
-    logger.write(fielName+"\n")
-    hash = getHashFromFile(fielName)
-    print('A cuantos usuarios desea transmitir el archivo')
+    fileName = getFileName(selectedOption)
+    logger.write(fileName+"\n")
+    hash = getHashFromFile(fileName)
+    print('A cuántos usuarios desea transmitir el archivo')
     clientsNumber = int(input())
-    print('Usted seleciono '+str(clientsNumber)+' usuarios')
+    print('Usted selecionó '+str(clientsNumber)+' usuarios')
     # server.listen(25)
     print("Socket is listening")
     clients = getClients(logger, server, clientsNumber)
@@ -123,15 +122,14 @@ def Main():
     for j in range(len(clients)):
         print("Creando Thread "+str(j))
         thread = threading.Thread(target=sendInfoThread, args=(
-            clients[j][0], fielName, hash, clients[j][1], logger,server))
+            clients[j][0], fileName, hash, clients[j][1], logger, server))
         thread.start()
         thread_list.append(thread)
         
     for thread in thread_list:
-        print("haciendo join")
+        print("Haciendo join")
         thread.join()
-
-    print("Se termino de enviar la informacion a todos los clientes")
+    print("Se terminó de enviar la información a todos los clientes")
 
 
 if __name__ == '__main__':
