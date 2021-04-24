@@ -14,14 +14,12 @@ def sendInfoThread(address, fileName, hash, clientId, logger: TextIOWrapper, ser
     file = open(fileName, "rb")
     content = file.read(4096)
     while content:
-        print("Enviando paquete")
         server.sendto(content, address)
-        print("Paquete enviado")
         paquetes += 1
         content = file.read(4096)
 
     server.sendto(bytes("Ya termine", "utf-8"), address)
-    print("Enviando ya termine")
+    print("Enviando ya termine cliente "+str(clientId))
     elapsed_time = time() - start_time
     logger.write("El tiempo de transferencia del archivo "+fileName+" al cliente " +
                  str(clientId)+" es: "+str(elapsed_time)+" segundos\n")
@@ -86,20 +84,17 @@ def getClients(logger: TextIOWrapper, server: socket, clientsNumber: int):
     lista = []
     clientId = 0
     print("Recibiendo clientes")
-    while clientsNumber >= clientId:
+    while clientsNumber > clientId:
         data, addr = server.recvfrom(40)
+        print("cliente "+str(clientId)+": "+data.decode("utf-8"))
         if data == bytes("Hola", "utf-8"):
             clientId += 1
             print('Connected to :', addr[0], ':', addr[1])
             logger.write("Cliente "+str(clientId)+":\n")
             logger.write("Se ha conectado el cliente " +
                          str(addr[0])+" al puerto "+str(addr[1])+"\n")
+            lista.append([addr,clientId])
             server.sendto(bytes(str(clientId), "utf-8"), addr)
-        elif data[0:20] == bytes("Ya recibi mi numero", "utf-8"):
-            clientId += 1
-            id = data[20:len(data)].decode('utf-8')
-            lista.append([addr, id])
-            print("El cliente recibio su número: " + id)
             
     return lista
 

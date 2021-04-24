@@ -4,7 +4,7 @@ import socket
 from datetime import datetime
 from time import time
 import os
-
+timeout = socket.timeout
 server_address = ('192.168.107.128', 10000)
 
 def sendDataToServer(data, socket: socket):
@@ -12,14 +12,13 @@ def sendDataToServer(data, socket: socket):
 
 
 def helloProtocol(socket: socket, log, clientNumber):
-    print("Mandando hola")
+    print("Mandando hola cliente: "+str(clientNumber))
     sendDataToServer(bytes("Hola", "utf-8"), socket)
-    print("Recibiendo id")
+    print("Recibiendo id cliente: "+str(clientNumber))
     data, address = socket.recvfrom(40)
     clientId = data.decode("utf-8")  
-    print("Mandando confirmación")
-    socket.sendto(bytes("Ya recibi mi numero","utf-8"), address)
-    #socket.sendto(bytes(str(clientId),"utf-8"), address)
+    # print("Mandando confirmación")
+    # socket.sendto(bytes("Ya recibi mi numero"+str(clientId),"utf-8"), address)
     fileName = "Cliente" + str(clientId) + "-Prueba-" + str(clientNumber) + ".mp4"
     log.write("El nombre de archivo recibido es: "+fileName+"\n")
     log.write("Mi numero de cliente es: " + clientId + "\n")
@@ -59,21 +58,29 @@ def saveFileFromServer(fileName, socket, clientId, log):
     start_time = time()
     paquetes = 0
     goodEnd = False
-    print("Empezando transferencia")
+    fallo = False
+    print("Empezando transferencia cliente ",clientId)
     while True:
         paquetes += 1
-        print("Recibiendo paquete, cliente", clientId)
-        bytes_read,address = socket.recvfrom(4096)
-        print("Recibí paquete, cliente", clientId)
-        if not bytes_read:
+        
+        try:
+            bytes_read,address = socket.recvfrom(4096)
+        except timeout:
+                print("timeout falla en descarga cliente ", clientId)
+                break
+                continue
+        if fallo:
             break
+        print("Recibí paquete, cliente", clientId)
         end = bytes_read[len(bytes_read) - 10:len(bytes_read)
                          ] == bytes("Ya termine", "utf-8")
+       
         if not end:
-            print("Escribiendo")
+            print("Escribiendo cliente "+str(clientId))
             file.write(bytes_read)
+        
         else:
-            print("Terminó")
+            print("Terminó cliente "+str(clientId))
             file.write(bytes_read[0:len(bytes_read) - 10])
             goodEnd = True
             break
@@ -109,11 +116,8 @@ def startLogger(clientId):
 def threadedCliente(id, clientNumber):
     print('Inicio cliente', id)
     cliente = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    cliente.settimeout(5)
     logger = startLogger(id)
-    # fileName, clientId = helloProtocol(cliente, logger)
-    now = datetime.now()
-    dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-    print("Date and time =", dt_string)
     logger.write("Comenzando Cliente\n")
     fileName, clientId = helloProtocol(cliente, logger, clientNumber)
     print("Termina protocolo hola")
